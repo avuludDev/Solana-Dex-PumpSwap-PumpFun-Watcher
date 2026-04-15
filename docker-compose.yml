@@ -1,0 +1,56 @@
+version: "3.9"
+
+services:
+  solana-parser:
+    build: .
+    container_name: solana-parser
+    restart: unless-stopped
+    volumes:
+      - ./logs:/app/logs
+      - ./data:/app/data
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    environment:
+      DB_HOST: host.docker.internal
+      DB_PORT: "5433"
+    command: python -u slot_indexer.py
+
+  # telegram-bot:
+  #   build: .
+  #   container_name: solana-telegram-bot
+  #   restart: unless-stopped
+  #   volumes:
+  #     - ./data:/app/data
+  #   extra_hosts:
+  #     - "host.docker.internal:host-gateway"
+  #   environment:
+  #     DB_HOST: host.docker.internal
+  #     DB_PORT: "5433"
+  #     TELEGRAM_BOT_TOKEN: ""
+  #     TELEGRAM_CHAT_ID: ""
+  #     TELEGRAM_POLL_INTERVAL: "300"
+  #     # Уровень 1: одна покупка от N $
+  #     TELEGRAM_MIN_PURCHASE_USD: "500"
+  #     # Уровень 2: один кошелёк купил токен минимум N раз
+  #     TELEGRAM_MIN_PURCHASES_COUNT: "3"
+  #     # Уровень 3: минимум китов (кошельков с 3+ покупками) по токену
+  #     TELEGRAM_MIN_WHALES_COUNT: "3"
+  #     # Уровень 4: минимальный суммарный объём по токену (USD)
+  #     TELEGRAM_MIN_TOTAL_VOLUME_USD: "0"
+  #     # Фильтр ликвидности: окно 1–3 дня, отправляем только если токен набирает (покупок >= продаж)
+  #     TELEGRAM_LIQUIDITY_WINDOW_DAYS: "1"
+  #     TELEGRAM_MIN_BUY_SELL_RATIO: "1.5"
+  #   command: python -u run_telegram_bot.py
+
+  token-metadata-updater:
+    build: .
+    container_name: solana-token-metadata-updater
+    restart: unless-stopped
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    environment:
+      DB_HOST: host.docker.internal
+      DB_PORT: "5433"
+    # Периодически обновляет метаданные токенов в фоновом режиме.
+    # Можно оставить как есть (один проход и завершение) или обернуть в простой цикл с sleep.
+    command: python -u token_metadata_updater.py

@@ -1,0 +1,4 @@
+asyncpg
+websockets
+aiohttp
+base58
